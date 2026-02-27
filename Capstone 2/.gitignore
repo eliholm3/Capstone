@@ -1,0 +1,14 @@
+#Node.js ignore
+node_modules
+package-lock.json
+
+# Python ignore
+__pycache__/
+*.pyc
+.venv/
+env/
+instance/
+
+# Database / Local Settings
+.env
+capstone.db

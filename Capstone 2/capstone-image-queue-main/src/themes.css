@@ -1,0 +1,53 @@
+/* Default Theme - Vibrant Gradient */
+body[data-theme="default"] {
+  --bg-gradient-start: #667eea;
+  --bg-gradient-end: #764ba2;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.8);
+
+  --stat-bg: rgba(255, 255, 255, 0.2);
+  --stat-kept-bg: rgba(74, 222, 128, 0.3);
+  --stat-discarded-bg: rgba(248, 113, 113, 0.3);
+
+  --card-bg: rgba(255, 255, 255, 0.15);
+  --card-blur: blur(10px);
+
+  --button-bg: #ffffff;
+  --button-text: #667eea;
+  --button-hover-shadow: rgba(0, 0, 0, 0.2);
+
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+}
+
+/* Developer Theme - Minimalist Dark */
+body[data-theme="developer"] {
+  --bg-gradient-start: #0d1117;
+  --bg-gradient-end: #161b22;
+  --text-primary: #e6edf3;
+  --text-secondary: #7d8590;
+
+  --stat-bg: #21262d;
+  --stat-kept-bg: #238636;
+  --stat-discarded-bg: #da3633;
+
+  --card-bg: #161b22;
+  --card-blur: none;
+
+  --button-bg: #21262d;
+  --button-text: #e6edf3;
+  --button-hover-shadow: rgba(56, 139, 253, 0.3);
+
+  --font-family: 'JetBrains Mono', monospace;
+
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+}
+
+/* Apply theme variables */
+body {
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  transition: background 0.3s ease;
+}
