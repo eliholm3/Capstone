@@ -8,7 +8,7 @@ async function main() {
   
 
   const client = new Client({
-    host: 'general-db.cduma06e2zsa.us-east-2.rds.amazonaws.com',
+    host: process.env.DB_HOST,
     port: 5432,
     database: 'postgres',
     user: 'postgres',
