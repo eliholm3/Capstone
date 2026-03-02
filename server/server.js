@@ -1,30 +1,16 @@
 require('dotenv').config();
-const { Client } = require('pg');
-const AWS = require('aws-sdk');
-AWS.config.update({ region: 'us-east-2' });
+const express = require('express');
 
-async function main() {
-  const password = process.env.DB_PASSWORD;
-  
+const loginRouter = require('./routes/login');
+const registerRouter = require('./routes/register');
 
-  const client = new Client({
-    host: process.env.DB_HOST,
-    port: 5432,
-    database: 'postgres',
-    user: 'postgres',
-    password,
-    ssl: { rejectUnauthorized: false, ca: require('fs').readFileSync('./certs/global-bundle.pem').toString() }
-  });
+const app = express();
+app.use(express.json());
 
-  try {
-    await client.connect();
-    const res = await client.query('SELECT version()');
-    console.log(res.rows[0].version);
-  } catch (error) {
-    console.error('Database error:', error);
-    throw error;
-  } finally {
-    await client.end();
-  }
-}
-main().catch(console.error);
+app.use('/api/user/login', loginRouter);
+app.use('/api/user/create', registerRouter);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
