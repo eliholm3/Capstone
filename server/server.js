@@ -13,7 +13,7 @@ async function main() {
     database: 'postgres',
     user: 'postgres',
     password,
-    ssl: { rejectUnauthorized: false, ca: require('fs').readFileSync('/certs/global-bundle.pem').toString() }
+    ssl: { rejectUnauthorized: false, ca: require('fs').readFileSync('./certs/global-bundle.pem').toString() }
   });
 
   try {
