@@ -1,9 +1,10 @@
+require('dotenv').config();
 const { Client } = require('pg');
 const AWS = require('aws-sdk');
 AWS.config.update({ region: 'us-east-2' });
 
 async function main() {
-  let password = '<Enter_DB_Password>';
+  const password = process.env.DB_PASSWORD;
   
 
   const client = new Client({
