@@ -1,40 +1,29 @@
-require("dotenv").config();
-const express = require("express");
-const { Pool } = require("pg");
+const { Client } = require('pg');
+const AWS = require('aws-sdk');
+AWS.config.update({ region: 'us-east-2' });
 
-const app = express();
-app.use(express.json());
+async function main() {
+  let password = '<Enter_DB_Password>';
+  
 
-// Create connection pool
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-});
+  const client = new Client({
+    host: 'general-db.cduma06e2zsa.us-east-2.rds.amazonaws.com',
+    port: 5432,
+    database: 'postgres',
+    user: 'postgres',
+    password,
+    ssl: { rejectUnauthorized: false, ca: require('fs').readFileSync('/certs/global-bundle.pem').toString() }
+  });
 
-// Test DB connection at startup
-pool.connect()
-    .then(client => {
-        console.log("Connected to database");
-        client.release();
-    })
-    .catch(err => {
-        console.error("Database connection error:", err);
-    });
-
-// Simple test route
-app.get("/", async (req, res) => {
-    try {
-        const result = await pool.query("SELECT NOW()");
-        res.json({
-            message: "Server is running",
-            time: result.rows[0].now
-        });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+  try {
+    await client.connect();
+    const res = await client.query('SELECT version()');
+    console.log(res.rows[0].version);
+  } catch (error) {
+    console.error('Database error:', error);
+    throw error;
+  } finally {
+    await client.end();
+  }
+}
+main().catch(console.error);
