@@ -15,7 +15,7 @@ router.post('/', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT user_id, username, password_hash, is_admin FROM users WHERE username = $1',
+      'SELECT user_id, username, password_hash FROM users WHERE username = $1',
       [username]
     );
 
@@ -31,12 +31,12 @@ router.post('/', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { user_id: user.user_id, username: user.username, is_admin: user.is_admin },
+      { user_id: user.user_id, username: user.username },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    res.json({ token, username: user.username, is_admin: user.is_admin });
+    res.json({ token, username: user.username });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Internal server error.' });
