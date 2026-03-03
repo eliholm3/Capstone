@@ -1,18 +1,41 @@
 require('dotenv').config();
 const express = require('express');
+const pool = require('./db');
 
-const loginRouter = require('./routes/login');
 const registerRouter = require('./routes/register');
-const testRouter = require('./routes/test');
+const loginRouter = require('./routes/login');
+const datasetsRouter = require('./routes/datasets');
+const imagesRouter = require('./routes/images');
 
 const app = express();
 app.use(express.json());
 
+// Auth routes
+app.use('/api/user/register', registerRouter);
 app.use('/api/user/login', loginRouter);
-app.use('/api/user/create', registerRouter);
-app.use('/api/test', testRouter);
+
+// Dataset routes
+app.use('/api/datasets', datasetsRouter);
+
+// Image routes (nested under datasets)
+app.use('/api/datasets', imagesRouter);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
+async function start() {
+  try {
+    const client = await pool.connect();
+    await client.query('SELECT 1');
+    client.release();
+    console.log('Database connected.');
+  } catch (err) {
+    console.error('Failed to connect to database:', err.message);
+    process.exit(1);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+start();
