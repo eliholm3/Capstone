@@ -36,6 +36,7 @@ router.post('/', async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    console.log(`User logged in: ${user.username} (id: ${user.user_id})`);
     res.json({ token, username: user.username });
   } catch (err) {
     console.error('Login error:', err);

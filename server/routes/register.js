@@ -46,6 +46,7 @@ router.post('/', async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    console.log(`User created: ${user.username} (id: ${user.user_id})`);
     res.status(201).json({ token, username: user.username, email: user.email, created_at: user.created_at });
   } catch (err) {
     console.error('Register error:', err);
