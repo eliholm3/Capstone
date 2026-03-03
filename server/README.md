@@ -1,3 +1,12 @@
+TO REGISTER ROUTE:
+curl -X POST http://ec2-3-144-42-190.us-east-2.compute.amazonaws.com/api/user/register \                                     
+    -H "Content-Type: application/json" \
+    -d '{"username": "xavier", "email": "xavier@example.com", "password": "password"}'       
+                                                                  
+TO LOGIN ROUTE:
+  curl -X POST http://ec2-3-144-42-190.us-east-2.compute.amazonaws.com/api/user/login \
+    -H "Content-Type: application/json" \
+    -d '{"username": "xavier", "password": "password"}'
 User
 
   ┌────────┬────────────────────┬──────┬─────────────────────────────────────────┐
