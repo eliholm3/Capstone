@@ -12,6 +12,7 @@ const pool = new Pool({
     rejectUnauthorized: false,
     ca: fs.readFileSync('./certs/global-bundle.pem').toString(),
   },
+  min: 1,
 });
 
 module.exports = pool;
