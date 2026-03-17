@@ -16,6 +16,7 @@ CREATE SCHEMA IF NOT EXISTS public;
             name TEXT,
             search_term TEXT,
             total_images INTEGER NOT NULL,
+            provider_offsets JSONB NOT NULL DEFAULT '{}',
             created_at TIMESTAMPTZ NOT NULL
   );
   
