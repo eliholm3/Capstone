@@ -5,7 +5,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Dimensions,
+  Modal,
+  TextInput,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,12 +20,12 @@ import SwipeCard from '../components/SwipeCard';
 import BufferStrip from '../components/BufferStrip';
 import StatsBar from '../components/StatsBar';
 
-const BUFFER_SIZE = 10;
 const FETCH_TRIGGER_THRESHOLD = 5;
 
 export default function SwipeScreen() {
   const { token, username, logout } = useAuth();
 
+  // Original State
   const [images, setImages] = useState([]);
   const [keptImages, setKeptImages] = useState([]);
   const [discardedImages, setDiscardedImages] = useState([]);
@@ -31,19 +33,156 @@ export default function SwipeScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [themeName, setThemeName] = useState('default');
-  const [imagesEndpoint, setImagesEndpoint] = useState(false); // tracks if endpoint exists
 
-  const hasFetchedInitial = useRef(false);
+  // New Dataset Management State
+  const [datasets, setDatasets] = useState([]);
+  const [activeDataset, setActiveDataset] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [newDatasetName, setNewDatasetName] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
   const isFetchingRef = useRef(false);
-
   const theme = themes[themeName] || themes.default;
 
-  // Restore theme from AsyncStorage
+  // 1. Initial Load: Theme and Datasets
   useEffect(() => {
     AsyncStorage.getItem('theme').then(saved => {
       if (saved && themes[saved]) setThemeName(saved);
     });
+    loadDatasets();
   }, []);
+
+  const loadDatasets = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/datasets`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setDatasets(data);
+      if (data.length > 0 && !activeDataset) {
+        selectDataset(data[0]);
+      }
+    } catch (e) {
+      console.error('Failed to load datasets', e);
+    }
+  };
+
+  const selectDataset = (dataset) => {
+    setActiveDataset(dataset);
+    setImages([]);
+    setCurrentIndex(0);
+    setKeptImages([]);
+    setDiscardedImages([]);
+    fetchImages(dataset.dataset_id);
+  };
+
+  const createDataset = async () => {
+    if (!newDatasetName || !searchTerm) return;
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/datasets`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: newDatasetName,
+          search_term: searchTerm,
+          total_images: 20,
+        }),
+      });
+      const newDS = await response.json();
+      setDatasets(prev => [newDS, ...prev]);
+      selectDataset(newDS);
+      setIsModalVisible(false);
+      setNewDatasetName('');
+      setSearchTerm('');
+    } catch (e) {
+      console.error('Creation error', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchImages = async (datasetId) => {
+    const existingIds = images.length > 0 ? images.map(img => img.image_id).join(',') : '';
+    
+    try {
+      const response = await fetch(`http://localhost:3000/api/datasets/${datasetId}/images?exclude=${existingIds}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (images.length === 0) {
+        setImages(data);
+      }
+
+      return data; 
+    } catch (e) {
+      console.error("Fetch error:", e);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    const remaining = images.length - currentIndex;
+    
+    if (activeDataset && remaining <= FETCH_TRIGGER_THRESHOLD && !isFetchingRef.current && images.length > 0) {
+      isFetchingRef.current = true;
+      setIsFetching(true);
+
+      fetchImages(activeDataset.dataset_id).then((newData) => {
+        setImages(prev => [...prev, ...newData]);
+        setIsFetching(false);
+        isFetchingRef.current = false;
+      });
+    }
+  }, [currentIndex, images.length, activeDataset]);
+
+  const handleSwipe = async (image_id, direction) => {
+    if (!activeDataset) return;
+
+    const status = direction === 'right' ? 'approved' : 'rejected';
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/datasets/${activeDataset.dataset_id}/images/${image_id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status })
+      });
+
+      if (response.ok) {
+        if (status === 'approved') {
+          setKeptImages(prev => [...prev, currentImage]);
+        } else {
+          setDiscardedImages(prev => [...prev, currentImage]);
+        }
+        
+        // Only advance the index if the DB successfully saved the status
+        setCurrentIndex(prev => prev + 1);
+      }
+    } catch (err) {
+      console.error('Swipe failed:', err);
+    }
+  };
+
+  const handleUndo = () => {
+    if (currentIndex === 0) return;
+    setCurrentIndex(prev => prev - 1);
+  };
+
+  const handleReset = () => {
+    if (activeDataset) selectDataset(activeDataset);
+  };
 
   const toggleTheme = () => {
     const next = themeName === 'default' ? 'developer' : 'default';
@@ -51,124 +190,16 @@ export default function SwipeScreen() {
     AsyncStorage.setItem('theme', next);
   };
 
-  const fetchImages = useCallback(async () => {
-    if (isFetchingRef.current) return;
-    isFetchingRef.current = true;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/user/images`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.status === 404) {
-        // Endpoint not yet implemented — show graceful stub
-        return [];
-      }
-
-      if (!response.ok) {
-        console.warn('Images endpoint error:', response.status);
-        return [];
-      }
-
-      const data = await response.json();
-      return Array.isArray(data) ? data : data.images || [];
-    } catch (e) {
-      console.warn('Images fetch error:', e.message);
-      return [];
-    } finally {
-      isFetchingRef.current = false;
-    }
-  }, [token]);
-
-  // Initial fetch
-  useEffect(() => {
-    if (!hasFetchedInitial.current) {
-      hasFetchedInitial.current = true;
-      setIsLoading(true);
-      fetchImages().then(newImages => {
-        setImages(newImages);
-        setIsLoading(false);
-      });
-    }
-  }, [fetchImages]);
-
-  // Fetch more when running low
-  useEffect(() => {
-    const remaining = images.length - currentIndex;
-    if (remaining <= FETCH_TRIGGER_THRESHOLD && !isFetchingRef.current && images.length > 0) {
-      setIsFetching(true);
-      fetchImages().then(newImages => {
-        setImages(prev => [...prev, ...newImages]);
-        setIsFetching(false);
-      });
-    }
-  }, [currentIndex, images.length, fetchImages]);
-
-  const handleSwipe = async (direction) => {
-    const currentImage = images[currentIndex];
-    if (!currentImage) return;
-
-    // Fire-and-forget label POST (endpoint may not exist yet)
-    fetch(`${API_BASE_URL}/api/user/labels`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ id: currentImage.id, label: direction === 'right' ? 'keep' : 'discard' }),
-    }).catch(() => {});
-
-    if (direction === 'right') {
-      setKeptImages(prev => [...prev, currentImage]);
-    } else {
-      setDiscardedImages(prev => [...prev, currentImage]);
-    }
-
-    setCurrentIndex(prev => prev + 1);
-  };
-
-  const handleUndo = () => {
-    if (currentIndex === 0) return;
-    const lastImage = images[currentIndex - 1];
-    setKeptImages(prev => prev.filter(img => img.id !== lastImage.id));
-    setDiscardedImages(prev => prev.filter(img => img.id !== lastImage.id));
-    setCurrentIndex(prev => prev - 1);
-  };
-
-  const handleReset = () => {
-    setCurrentIndex(0);
-    setKeptImages([]);
-    setDiscardedImages([]);
-    setImages([]);
-    hasFetchedInitial.current = false;
-    isFetchingRef.current = false;
-    setIsLoading(true);
-    fetchImages().then(newImages => {
-      setImages(newImages);
-      setIsLoading(false);
-      hasFetchedInitial.current = true;
-    });
-  };
-
+  // Buffer Helper
   const getBufferImages = () => {
-    const startIdx = Math.max(0, currentIndex - 5);
-    const endIdx = Math.min(images.length, currentIndex + 6);
+    const startIdx = Math.max(0, currentIndex - 2);
+    const endIdx = Math.min(images.length, currentIndex + 5);
     const result = [];
-
     for (let i = startIdx; i < endIdx; i++) {
       const img = images[i];
-      const isPast = i < currentIndex;
-      const isCurrent = i === currentIndex;
-
-      let status = null;
-      if (isPast) {
-        if (keptImages.find(k => k.id === img.id)) status = 'kept';
-        else if (discardedImages.find(d => d.id === img.id)) status = 'discarded';
-      }
-
-      result.push({ ...img, index: i, isPast, isCurrent, status });
+      const status = i < currentIndex ? (keptImages.find(k => k.image_id === img.image_id) ? 'kept' : 'discarded') : null;
+      result.push({ ...img, isCurrent: i === currentIndex, status });
     }
-
     return result;
   };
 
@@ -178,15 +209,18 @@ export default function SwipeScreen() {
   return (
     <LinearGradient colors={theme.bgColors} style={styles.gradient}>
       <SafeAreaView style={styles.safe}>
-        {/* Top bar */}
+        
+        {/* Top bar - Modified to include Selector */}
         <View style={styles.topBar}>
           <TouchableOpacity onPress={logout} style={[styles.iconBtn, { backgroundColor: theme.buttonBg, borderColor: theme.buttonBorder, borderRadius: theme.borderRadius }]}>
             <Text style={[styles.iconBtnText, { color: theme.buttonText }]}>Logout</Text>
           </TouchableOpacity>
 
-          <Text style={[styles.screenTitle, { color: theme.text }]}>
-            {username ? `Hi, ${username}` : 'Image Classifier'}
-          </Text>
+          <TouchableOpacity onPress={() => setIsModalVisible(true)} style={styles.selectorTrigger}>
+            <Text style={[styles.selectorText, { color: theme.text }]}>
+              {activeDataset ? `📁 ${activeDataset.name}` : 'Select Category'} ▼
+            </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity onPress={toggleTheme} style={[styles.iconBtn, { backgroundColor: theme.buttonBg, borderColor: theme.buttonBorder, borderRadius: theme.borderRadius }]}>
             <Text style={[styles.iconBtnText, { color: theme.buttonText }]}>
@@ -195,86 +229,62 @@ export default function SwipeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Stats */}
-        <StatsBar
-          kept={keptImages.length}
-          discarded={discardedImages.length}
-          inBuffer={images.length - currentIndex}
-          isFetching={isFetching}
-          theme={theme}
-        />
+        <StatsBar kept={keptImages.length} discarded={discardedImages.length} inBuffer={images.length - currentIndex} isFetching={isFetching} theme={theme} />
 
-        {/* Buffer strip */}
         {!isLoading && bufferImages.length > 0 && (
           <BufferStrip bufferImages={bufferImages} theme={theme} />
         )}
 
-        {/* Card area */}
         <View style={styles.cardContainer}>
-          {isLoading && (
-            <View style={styles.centered}>
-              <ActivityIndicator size="large" color={theme.loadingColor} />
-              <Text style={[styles.loadingText, { color: theme.text }]}>Loading images...</Text>
-            </View>
-          )}
-
-          {!isLoading && !currentImage && (
+          {isLoading ? (
+            <View style={styles.centered}><ActivityIndicator size="large" color={theme.loadingColor} /></View>
+          ) : currentImage ? (
+            <SwipeCard key={currentImage.image_id} image={currentImage} onSwipe={handleSwipe} theme={theme} />
+          ) : (
             <View style={styles.centered}>
               <Text style={[styles.loadingText, { color: theme.text }]}>
-                {images.length === 0
-                  ? 'Image endpoint not yet available.\nCheck back soon!'
-                  : 'Loading next batch...'}
+                {activeDataset ? "All images reviewed!" : "Create a category to begin."}
               </Text>
             </View>
           )}
-
-          {!isLoading && currentImage && (
-            <SwipeCard
-              key={currentImage.id ?? currentIndex}
-              image={currentImage}
-              onSwipe={handleSwipe}
-              theme={theme}
-            />
-          )}
         </View>
 
-        {/* Footer controls */}
+        {/* Footer */}
         <View style={styles.footer}>
-          <Text style={[styles.hint, { color: theme.subText }]}>
-            Swipe left to discard  •  Swipe right to keep
-          </Text>
+          <Text style={[styles.hint, { color: theme.subText }]}>Swipe left to discard • Swipe right to keep</Text>
           <View style={styles.controls}>
-            <TouchableOpacity
-              onPress={handleUndo}
-              disabled={currentIndex === 0}
-              style={[
-                styles.controlBtn,
-                {
-                  backgroundColor: theme.buttonBg,
-                  borderColor: theme.buttonBorder,
-                  borderRadius: theme.borderRadius,
-                  opacity: currentIndex === 0 ? 0.4 : 1,
-                },
-              ]}
-            >
-              <Text style={[styles.controlBtnText, { color: theme.buttonText }]}>Undo</Text>
+            <TouchableOpacity onPress={handleUndo} disabled={currentIndex === 0} style={[styles.controlBtn, { backgroundColor: theme.buttonBg, borderRadius: theme.borderRadius, opacity: currentIndex === 0 ? 0.4 : 1 }]}>
+              <Text style={{ color: theme.buttonText }}>Undo</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleReset}
-              style={[
-                styles.controlBtn,
-                {
-                  backgroundColor: theme.buttonBg,
-                  borderColor: theme.buttonBorder,
-                  borderRadius: theme.borderRadius,
-                },
-              ]}
-            >
-              <Text style={[styles.controlBtnText, { color: theme.buttonText }]}>Reset</Text>
+            <TouchableOpacity onPress={handleReset} style={[styles.controlBtn, { backgroundColor: theme.buttonBg, borderRadius: theme.borderRadius }]}>
+              <Text style={{ color: theme.buttonText }}>Reset</Text>
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Modal - Moved outside of cardContainer to prevent layout issues */}
+        <Modal visible={isModalVisible} transparent animationType="fade">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Datasets</Text>
+              <ScrollView style={{ maxHeight: 150 }}>
+                {datasets.map(ds => (
+                  <TouchableOpacity key={ds.dataset_id} onPress={() => { selectDataset(ds); setIsModalVisible(false); }} style={styles.dsItem}>
+                    <Text style={styles.dsItemText}>{ds.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <View style={styles.divider} />
+              <TextInput style={styles.input} value={newDatasetName} onChangeText={setNewDatasetName} placeholder="New Category Name" placeholderTextColor="#999" />
+              <TextInput style={styles.input} value={searchTerm} onChangeText={setSearchTerm} placeholder="Wikimedia Search (e.g. Birds)" placeholderTextColor="#999" />
+              <View style={styles.modalButtons}>
+                <TouchableOpacity onPress={() => setIsModalVisible(false)}><Text style={styles.cancelText}>Cancel</Text></TouchableOpacity>
+                <TouchableOpacity onPress={createDataset} style={styles.createBtn}><Text style={{ color: '#fff' }}>Create</Text></TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
       </SafeAreaView>
     </LinearGradient>
   );
@@ -283,62 +293,28 @@ export default function SwipeScreen() {
 const styles = StyleSheet.create({
   gradient: { flex: 1 },
   safe: { flex: 1 },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  screenTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  iconBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-  },
-  iconBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  cardContainer: {
-    flex: 1,
-    marginHorizontal: 16,
-    marginVertical: 12,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
-  loadingText: {
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  footer: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    alignItems: 'center',
-    gap: 10,
-  },
-  hint: {
-    fontSize: 13,
-  },
-  controls: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  controlBtn: {
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderWidth: 1,
-  },
-  controlBtnText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8 },
+  selectorTrigger: { padding: 8 },
+  selectorText: { fontSize: 16, fontWeight: '700' },
+  iconBtn: { paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1 },
+  iconBtnText: { fontSize: 13, fontWeight: '600' },
+  cardContainer: { flex: 1, marginHorizontal: 16, marginVertical: 12, justifyContent: 'center' },
+  centered: { alignItems: 'center', gap: 12 },
+  loadingText: { fontSize: 16, textAlign: 'center' },
+  footer: { paddingHorizontal: 16, paddingBottom: 20, alignItems: 'center', gap: 10 },
+  hint: { fontSize: 13 },
+  controls: { flexDirection: 'row', gap: 12 },
+  controlBtn: { paddingHorizontal: 24, paddingVertical: 10, borderWidth: 1 },
+  
+  // Modal Styles
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#fff', borderRadius: 15, padding: 20 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 15, color: '#333' },
+  dsItem: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  dsItemText: { fontSize: 16, color: '#4A90E2' },
+  divider: { height: 1, backgroundColor: '#eee', marginVertical: 15 },
+  input: { backgroundColor: '#f5f5f5', borderRadius: 8, padding: 12, marginBottom: 10, fontSize: 16 },
+  modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 20, marginTop: 10 },
+  cancelText: { color: '#666', fontSize: 16 },
+  createBtn: { backgroundColor: '#4A90E2', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
 });

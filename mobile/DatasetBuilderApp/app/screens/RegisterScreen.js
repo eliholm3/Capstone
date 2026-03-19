@@ -19,6 +19,7 @@ import { API_BASE_URL } from '../config';
 export default function RegisterScreen({ navigation }) {
   const { login } = useAuth();
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState(''); // Added Email state
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,8 +27,16 @@ export default function RegisterScreen({ navigation }) {
   const handleRegister = async () => {
     setError('');
 
-    if (!username.trim() || !password) {
-      setError('Username and password are required.');
+    // Added email to the validation check
+    if (!username.trim() || !email.trim() || !password) {
+      setError('Username, email, and password are required.');
+      return;
+    }
+
+    // Basic email format validation
+    const emailRegex = /\S+@\S+\.\S+/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address.');
       return;
     }
 
@@ -38,10 +47,14 @@ export default function RegisterScreen({ navigation }) {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/user/create`, {
+      const response = await fetch(`${API_BASE_URL}/api/user/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim(), password }),
+        body: JSON.stringify({ 
+          username: username.trim(), 
+          email: email.trim(), // Now sending email to the backend
+          password 
+        }),
       });
 
       const data = await response.json();
@@ -52,7 +65,6 @@ export default function RegisterScreen({ navigation }) {
       }
 
       await login(data.token, data.username);
-      // Navigation handled automatically by conditional navigator in App.js
     } catch (e) {
       setError('Network error. Check your connection and server address.');
     } finally {
@@ -80,6 +92,19 @@ export default function RegisterScreen({ navigation }) {
                 autoCapitalize="none"
                 autoCorrect={false}
                 placeholder="Choose a username"
+                placeholderTextColor="#aaa"
+              />
+
+              {/* New Email Field */}
+              <Text style={styles.label}>Email Address</Text>
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                placeholder="email@example.com"
                 placeholderTextColor="#aaa"
               />
 

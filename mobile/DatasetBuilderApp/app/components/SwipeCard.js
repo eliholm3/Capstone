@@ -32,7 +32,7 @@ export default function SwipeCard({ image, onSwipe, theme }) {
             duration: 300,
             useNativeDriver: false,
           }).start(() => {
-            onSwipe(direction);
+            onSwipe(image.image_id, direction);
             pan.setValue({ x: 0, y: 0 });
           });
         } else {

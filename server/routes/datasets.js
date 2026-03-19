@@ -52,6 +52,8 @@ router.post('/', auth, async (req, res) => {
 
     res.status(201).json({
       ...dataset,
+      total_count: images.length,
+      pending_count: images.length,
       provider_offsets: offsets,
       images_fetched: images.length,
     });

@@ -4,7 +4,7 @@ from psycopg2.extras import RealDictCursor
 import time
 
 # --- CONFIGURATION ---
-# 1. Update with your actual Postgres credentials
+# 1. Update with actual Postgres credentials
 DB_CONFIG = {
     "dbname": "your_db",
     "user": "your_user",
@@ -13,7 +13,6 @@ DB_CONFIG = {
     "port": "5432"
 }
 
-# 2. Update with your project details
 USER_AGENT = "ImageSwipeCapstone/1.0 (capstoneimagecollector@gmail.com)"
 WIKI_API_URL = "https://commons.wikimedia.org/w/api.php"
 BUFFER_THRESHOLD = 3
