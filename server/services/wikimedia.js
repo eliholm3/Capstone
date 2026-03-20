@@ -37,6 +37,7 @@ async function fetchWikimediaImages(searchTerm, limit = 20, offset = 0) {
       gsrlimit: '20',             // Get 20 results per API call (50 max)
       prop: 'imageinfo',          // We want image metadata
       iiprop: 'url|extmetadata',  // Specifically the URL and license info
+      iiurlwidth: '480',          // Phone-width thumbnail (~360-430px logical + margins)
     });
 
     // If we have an offset, skip ahead to where we left off
@@ -45,7 +46,9 @@ async function fetchWikimediaImages(searchTerm, limit = 20, offset = 0) {
     }
 
     // Call the API
-    const response = await fetch(`${API_URL}?${params}`);
+    const response = await fetch(`${API_URL}?${params}`, {
+      headers: { 'User-Agent': 'ImageDatasetBuilder/1.0 (capstoneimagecollector@gmail.com)' },
+    });
     const data = await response.json();
 
     // The API returns pages as an object like { "12345": { ... }, "67890": { ... } }
@@ -76,9 +79,9 @@ async function fetchWikimediaImages(searchTerm, limit = 20, offset = 0) {
       const hasGoodLicense = GOOD_LICENSES.some((good) => licenseLower.includes(good));
       if (!hasGoodLicense) continue;
 
-      // This image passed all checks — keep it
+      // This image passed all checks — use thumbnail if available, fall back to full-res
       images.push({
-        url: info.url,
+        url: info.thumburl || info.url,
         title: title.replace(/^File:/, ''), // Remove the "File:" prefix
         license,
       });
