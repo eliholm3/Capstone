@@ -87,6 +87,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     gap: 6,
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   item: {
     overflow: 'visible',

@@ -77,7 +77,7 @@ export default function SwipeCard({ image, onSwipe, theme }) {
     <Animated.View
       style={[
         styles.card,
-        { borderRadius },
+        { borderRadius, cursor: 'grab', userSelect: 'none' },
         {
           transform: [
             { translateX: pan.x },
@@ -94,6 +94,7 @@ export default function SwipeCard({ image, onSwipe, theme }) {
         style={styles.image}
         contentFit="cover"
         transition={200}
+        pointerEvents="none"
       />
 
       {/* KEEP overlay */}
