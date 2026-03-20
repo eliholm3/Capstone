@@ -7,8 +7,9 @@
 ## How to run?
  - please just use
 
-```bash docker compose build && docker compose up'''
-
+```bash
+docker compose build && docker compose up
+```
 ## Basically how it works
 
  - There are two containers, {dev, db}, that run with the docker compose
