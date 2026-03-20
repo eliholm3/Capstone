@@ -67,13 +67,14 @@ export default function SwipeScreen() {
     }
   };
 
-  const selectDataset = (dataset) => {
+  const selectDataset = async (dataset) => {
     setActiveDataset(dataset);
     setImages([]);
     setCurrentIndex(0);
     setKeptImages([]);
     setDiscardedImages([]);
-    fetchImages(dataset.dataset_id);
+    const data = await fetchImages(dataset.dataset_id);
+    setImages(data);
   };
 
   const createDataset = async () => {
@@ -106,10 +107,8 @@ export default function SwipeScreen() {
   };
 
   const fetchImages = async (datasetId) => {
-    const existingIds = images.length > 0 ? images.map(img => img.image_id).join(',') : '';
-    
     try {
-      const response = await fetch(`http://localhost:3000/api/datasets/${datasetId}/images?exclude=${existingIds}`, {
+      const response = await fetch(`${API_BASE_URL}/api/datasets/${datasetId}/images`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -117,13 +116,7 @@ export default function SwipeScreen() {
         throw new Error(`Server responded with ${response.status}`);
       }
 
-      const data = await response.json();
-
-      if (images.length === 0) {
-        setImages(data);
-      }
-
-      return data; 
+      return await response.json();
     } catch (e) {
       console.error("Fetch error:", e);
       return [];
@@ -138,7 +131,11 @@ export default function SwipeScreen() {
       setIsFetching(true);
 
       fetchImages(activeDataset.dataset_id).then((newData) => {
-        setImages(prev => [...prev, ...newData]);
+        setImages(prev => {
+          const existingIds = new Set(prev.map(img => img.image_id));
+          const unique = newData.filter(img => !existingIds.has(img.image_id));
+          return [...prev, ...unique];
+        });
         setIsFetching(false);
         isFetchingRef.current = false;
       });
@@ -298,7 +295,7 @@ const styles = StyleSheet.create({
   selectorText: { fontSize: 16, fontWeight: '700' },
   iconBtn: { paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1 },
   iconBtnText: { fontSize: 13, fontWeight: '600' },
-  cardContainer: { flex: 1, marginHorizontal: 16, marginVertical: 12, justifyContent: 'center' },
+  cardContainer: { flex: 1, width: '100%', maxWidth: 480, alignSelf: 'center', paddingHorizontal: 16, marginVertical: 12, justifyContent: 'center' },
   centered: { alignItems: 'center', gap: 12 },
   loadingText: { fontSize: 16, textAlign: 'center' },
   footer: { paddingHorizontal: 16, paddingBottom: 20, alignItems: 'center', gap: 10 },
