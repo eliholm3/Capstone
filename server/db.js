@@ -2,10 +2,13 @@ require('dotenv').config();
 const { Pool } = require('pg');
 const fs = require('fs');
 
-const sslConfig = process.env.DB_SSL === 'false' ? false : {
-  rejectUnauthorized: false,
-  ca: fs.readFileSync('./certs/global-bundle.pem').toString(),
-};
+let sslConfig = false;
+if (process.env.DB_SSL !== 'false') {
+  sslConfig = {
+    rejectUnauthorized: false,
+    ca: fs.readFileSync('./certs/global-bundle.pem').toString(),
+  };
+}
 
 const pool = new Pool({
   host: process.env.DB_HOST,
