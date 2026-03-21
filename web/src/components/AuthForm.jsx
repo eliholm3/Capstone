@@ -44,12 +44,12 @@ function AuthForm({ onAuth }) {
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight text-white">
-            {isLogin ? 'Welcome back' : 'Create an account'}
+            Dataset Builder
           </h1>
           <p className="text-sm text-zinc-400">
             {isLogin
-              ? 'Enter your credentials to sign in'
-              : 'Enter your details to get started'}
+              ? 'Sign in to the Export Panel'
+              : 'Create an account for the Export Panel'}
           </p>
         </div>
 

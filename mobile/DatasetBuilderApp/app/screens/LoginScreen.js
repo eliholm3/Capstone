@@ -65,13 +65,13 @@ export default function LoginScreen({ navigation }) {
           <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
             <View style={styles.inner}>
               <View style={styles.header}>
-                <Text style={[styles.title, { color: t.text }]}>Welcome back</Text>
+                <Text style={[styles.title, { color: t.text }]}>Dataset Builder</Text>
                 <Text style={[styles.subtitle, { color: t.mutedText }]}>
-                  Enter your credentials to sign in
+                  Sign in to the Swipe Interface
                 </Text>
               </View>
 
-              <View style={[styles.card, { backgroundColor: t.cardBg, borderColor: t.border }]}>
+              <View>
                 <Text style={[styles.label, { color: t.subText }]}>Username</Text>
                 <TextInput
                   style={[styles.input, { backgroundColor: t.inputBg, borderColor: t.inputBorder, color: t.inputText }]}

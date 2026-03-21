@@ -82,13 +82,13 @@ export default function RegisterScreen({ navigation }) {
           <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
             <View style={styles.inner}>
               <View style={styles.header}>
-                <Text style={[styles.title, { color: t.text }]}>Create an account</Text>
+                <Text style={[styles.title, { color: t.text }]}>Dataset Builder</Text>
                 <Text style={[styles.subtitle, { color: t.mutedText }]}>
-                  Enter your details to get started
+                  Create an account for the Swipe Interface
                 </Text>
               </View>
 
-              <View style={[styles.card, { backgroundColor: t.cardBg, borderColor: t.border }]}>
+              <View>
                 <Text style={[styles.label, { color: t.subText }]}>Username</Text>
                 <TextInput
                   style={[styles.input, { backgroundColor: t.inputBg, borderColor: t.inputBorder, color: t.inputText }]}
