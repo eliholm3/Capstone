@@ -69,15 +69,11 @@ export default function SwipeCard({ image, onSwipe, theme }) {
     extrapolate: 'clamp',
   });
 
-  const keepColor = theme?.keepColor || '#4ade80';
-  const discardColor = theme?.discardColor || '#f87171';
-  const borderRadius = theme?.borderRadius ?? 16;
-
   return (
     <Animated.View
       style={[
         styles.card,
-        { borderRadius, cursor: 'grab', userSelect: 'none' },
+        { borderColor: theme.border, cursor: 'grab', userSelect: 'none' },
         {
           transform: [
             { translateX: pan.x },
@@ -97,16 +93,14 @@ export default function SwipeCard({ image, onSwipe, theme }) {
         pointerEvents="none"
       />
 
-      {/* KEEP overlay */}
       <Animated.View style={[styles.overlay, styles.keepOverlay, { opacity: keepOpacity }]}>
-        <Text style={[styles.overlayText, { color: keepColor, borderColor: keepColor }]}>
+        <Text style={[styles.overlayText, { color: theme.keepColor, borderColor: theme.keepColor }]}>
           KEEP
         </Text>
       </Animated.View>
 
-      {/* DISCARD overlay */}
       <Animated.View style={[styles.overlay, styles.discardOverlay, { opacity: discardOpacity }]}>
-        <Text style={[styles.overlayText, { color: discardColor, borderColor: discardColor }]}>
+        <Text style={[styles.overlayText, { color: theme.discardColor, borderColor: theme.discardColor }]}>
           DISCARD
         </Text>
       </Animated.View>
@@ -118,13 +112,10 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#18181b',
+    borderRadius: 8,
+    borderWidth: 1,
     overflow: 'hidden',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
   },
   image: {
     width: '100%',
@@ -146,8 +137,8 @@ const styles = StyleSheet.create({
   overlayText: {
     fontSize: 32,
     fontWeight: '900',
-    borderWidth: 4,
-    borderRadius: 6,
+    borderWidth: 3,
+    borderRadius: 4,
     paddingHorizontal: 12,
     paddingVertical: 4,
     letterSpacing: 2,

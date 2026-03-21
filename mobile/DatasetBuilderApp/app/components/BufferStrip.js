@@ -15,7 +15,6 @@ const CURRENT_H = 92;
 export default function BufferStrip({ bufferImages, theme }) {
   const scrollRef = useRef(null);
 
-  // Auto-scroll to center the current item
   useEffect(() => {
     const currentIdx = bufferImages.findIndex(img => img.isCurrent);
     if (currentIdx !== -1 && scrollRef.current) {
@@ -46,24 +45,25 @@ export default function BufferStrip({ bufferImages, theme }) {
               key={img.id ?? img.index}
               style={[
                 styles.item,
-                { width: w, height: h, borderRadius: theme.borderRadius / 2 },
+                { width: w, height: h, borderRadius: 4, borderColor: theme.border },
                 isCurrent && {
                   borderWidth: 2,
                   borderColor: theme.currentBorder,
                 },
+                !isCurrent && { borderWidth: 1 },
                 !isCurrent && img.isPast && { opacity: 0.7 },
               ]}
             >
               <Image
                 source={{ uri: img.url }}
-                style={[styles.thumb, { borderRadius: theme.borderRadius / 2 }]}
+                style={[styles.thumb, { borderRadius: 3 }]}
                 contentFit="cover"
               />
               {overlayColor && (
                 <View
                   style={[
                     styles.overlay,
-                    { backgroundColor: overlayColor, borderRadius: theme.borderRadius / 2 },
+                    { backgroundColor: overlayColor, borderRadius: 3 },
                   ]}
                 />
               )}
