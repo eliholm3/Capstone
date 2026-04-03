@@ -6,7 +6,7 @@ const pool = require('../db');
 const router = express.Router();
 
 // POST /api/user/login
-router.post('/', async (req, res) => {
+async function loginHandler(req, res) {
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -42,6 +42,9 @@ router.post('/', async (req, res) => {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Internal server error.' });
   }
-});
+}
+
+router.post('/', loginHandler);
 
 module.exports = router;
+module.exports.loginHandler = loginHandler;

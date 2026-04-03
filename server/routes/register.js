@@ -8,7 +8,7 @@ const router = express.Router();
 const SALT_ROUNDS = 10;
 
 // POST /api/user/register
-router.post('/', async (req, res) => {
+async function registerHandler(req, res) {
   const { username, email, password } = req.body;
 
   if (!username || !email || !password) {
@@ -52,6 +52,9 @@ router.post('/', async (req, res) => {
     console.error('Register error:', err);
     res.status(500).json({ error: 'Internal server error.' });
   }
-});
+}
+
+router.post('/', registerHandler);
 
 module.exports = router;
+module.exports.registerHandler = registerHandler;
