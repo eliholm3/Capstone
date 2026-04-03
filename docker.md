@@ -25,3 +25,11 @@ docker compose build && docker compose up
  - PORT 5000: An extra port if we ever need it!
 
 #### There is no exposed port for db because all interactions should be internal through the express server
+
+## TESTING:
+- For our tests it will also be using the same dockerfile/docker-compose, but it will be a different profile.
+```bash
+docker compose --profile test run --rm test
+```
+- It will automatically run the unit tests provided in server, plus whatever future tests are rigged up with it.
+- The --rm test automatically cleans up the container after tests are ran.
