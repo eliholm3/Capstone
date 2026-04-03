@@ -6,7 +6,7 @@ const { fetchWikimediaImages } = require('../services/wikimedia');
 const router = express.Router();
 
 // POST /api/datasets — Create a new dataset and fetch images from Wikimedia
-router.post('/', auth, async (req, res) => {
+async function createDataset(req, res) {
   const { name, search_term, total_images } = req.body;
 
   if (!name || !search_term || !total_images) {
@@ -64,10 +64,10 @@ router.post('/', auth, async (req, res) => {
   } finally {
     client.release();
   }
-});
+}
 
 // GET /api/datasets — List all datasets for the logged-in user
-router.get('/', auth, async (req, res) => {
+async function listDatasets(req, res) {
   try {
     const result = await pool.query(
       `SELECT d.*,
@@ -87,10 +87,10 @@ router.get('/', auth, async (req, res) => {
     console.error('List datasets error:', err);
     res.status(500).json({ error: 'Internal server error.' });
   }
-});
+}
 
 // GET /api/datasets/:id — Get a single dataset (must be yours)
-router.get('/:id', auth, async (req, res) => {
+async function getDataset(req, res) {
   try {
     const result = await pool.query(
       `SELECT d.*,
@@ -114,10 +114,10 @@ router.get('/:id', auth, async (req, res) => {
     console.error('Get dataset error:', err);
     res.status(500).json({ error: 'Internal server error.' });
   }
-});
+}
 
 // DELETE /api/datasets/:id — Delete a dataset (cascades to images)
-router.delete('/:id', auth, async (req, res) => {
+async function deleteDataset(req, res) {
   try {
     const result = await pool.query(
       'DELETE FROM datasets WHERE dataset_id = $1 AND user_id = $2 RETURNING dataset_id',
@@ -133,6 +133,15 @@ router.delete('/:id', auth, async (req, res) => {
     console.error('Delete dataset error:', err);
     res.status(500).json({ error: 'Internal server error.' });
   }
-});
+}
+
+router.post('/', auth, createDataset);
+router.get('/', auth, listDatasets);
+router.get('/:id', auth, getDataset);
+router.delete('/:id', auth, deleteDataset);
 
 module.exports = router;
+module.exports.createDataset = createDataset;
+module.exports.listDatasets = listDatasets;
+module.exports.getDataset = getDataset;
+module.exports.deleteDataset = deleteDataset;
