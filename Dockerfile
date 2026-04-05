@@ -10,5 +10,5 @@ CMD cp server/.env.example server/.env && \
     cd ../mobile/DatasetBuilderApp && npm install && \
     until pg_isready -h db -p 5432 -U postgres; do echo "Waiting for Postgres..."; sleep 1; done && \
     cd /root/Capstone/server && node server.js & \
-    cd /root/Capstone/mobile/DatasetBuilderApp && npx expo start --web --port 8081 & \
+    cd /root/Capstone/mobile/DatasetBuilderApp && npx expo start --port 8081 & \
     wait
