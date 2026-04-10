@@ -36,13 +36,27 @@ function ExportDashboard({ username, onSignOut }) {
   const handleExport = async (datasetId, datasetName) => {
     setExporting(datasetId)
     try {
-      const res = await fetch(`/api/export/${datasetId}`, {
+      const res = await fetch(`/api/export/images?dataset_id=${datasetId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
       if (!res.ok) {
-        const data = await res.json()
-        alert(data.error || 'Export failed.')
+        // Response may be JSON (server error) or HTML (route not found, proxy error)
+        let message = `Export failed (${res.status}).`
+        try {
+          const data = await res.json()
+          if (data?.error) message = data.error
+        } catch {
+          // Non-JSON body — fall back to the generic status message
+        }
+        alert(message)
+        return
+      }
+
+      // Double-check we actually got CSV, not an HTML fallback page
+      const contentType = res.headers.get('content-type') || ''
+      if (!contentType.includes('text/csv')) {
+        alert('Server returned an unexpected response. Is the backend running?')
         return
       }
 

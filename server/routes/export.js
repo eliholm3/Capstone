@@ -6,6 +6,17 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+// Escape a value for CSV per RFC 4180: wrap in quotes if it contains
+// a comma, quote, or newline; double any embedded quotes.
+function csvEscape(value) {
+  if (value == null) return '';
+  const str = String(value);
+  if (/[",\n\r]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
 // GET /api/export/images?dataset_id=123 — Export approved images as CSV
 async function exportImages(req, res) {
   const { dataset_id } = req.query;
@@ -33,7 +44,7 @@ async function exportImages(req, res) {
     // Build CSV
     const header = 'image_id,url,title,license';
     const rows = result.rows.map(r =>
-      `${r.image_id},${r.url},${r.title || ''},${r.license || ''}`
+      [r.image_id, csvEscape(r.url), csvEscape(r.title), csvEscape(r.license)].join(',')
     );
     const csv = [header, ...rows].join('\n');
 
