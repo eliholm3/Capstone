@@ -13,7 +13,7 @@ function AuthForm({ onAuth }) {
     e.preventDefault()
     setError('')
 
-    const url = isLogin ? '/api/user/login' : '/api/user/register'
+    const url = isLogin ? '/api/export/login' : '/api/user/register'
     const body = isLogin
       ? { username: form.username, password: form.password }
       : { username: form.username, email: form.email, password: form.password }

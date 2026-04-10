@@ -29,13 +29,13 @@ async function createDataset(req, res) {
     // Fetch images from Wikimedia
     const { images, nextOffset } = await fetchWikimediaImages(search_term, total_images, 0);
 
-    // Insert images into the database, skipping any duplicate URLs
+    // Insert images into the database, skipping duplicates by URL or title
     for (const img of images) {
       await client.query(
         `INSERT INTO images (dataset_id, url, title, license, status, added_at)
          SELECT $1, $2, $3, $4, 'pending', NOW()
          WHERE NOT EXISTS (
-           SELECT 1 FROM images WHERE dataset_id = $1 AND url = $2
+           SELECT 1 FROM images WHERE dataset_id = $1 AND (url = $2 OR title = $3)
          )`,
         [dataset.dataset_id, img.url, img.title, img.license]
       );

@@ -66,8 +66,12 @@ export default function SwipeScreen() {
     setImages([]);
     setKeptImages([]);
     setDiscardedImages([]);
+<<<<<<< HEAD
+    setCurrentIndex(0);
+=======
     cursorRef.current = 0;
     if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+>>>>>>> 49fe6005fbc2192f4764eb8b96ac7b0aa9b21dfd
     const data = await fetchImages(dataset.dataset_id);
     setImages(data);
   };
@@ -136,9 +140,7 @@ export default function SwipeScreen() {
       if (newData.length > 0) {
         setImages((prev) => {
           const existingIds = new Set(prev.map((img) => img.image_id));
-          const unique = newData.filter(
-            (img) => !existingIds.has(img.image_id),
-          );
+          const unique = newData.filter((img) => !existingIds.has(img.image_id));
           return unique.length > 0 ? [...prev, ...unique] : prev;
         });
       }
@@ -165,12 +167,7 @@ export default function SwipeScreen() {
     if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
 
     const remaining = images.length - currentIndex;
-    if (
-      activeDataset &&
-      remaining === 0 &&
-      images.length > 0 &&
-      !isFetchingRef.current
-    ) {
+    if (activeDataset && remaining === 0 && images.length > 0 && !isFetchingRef.current) {
       retryTimerRef.current = setTimeout(() => {
         doFetch(activeDataset.dataset_id);
       }, 3000);

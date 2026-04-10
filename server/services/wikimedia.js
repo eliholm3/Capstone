@@ -75,7 +75,7 @@ async function fetchWikimediaImages(searchTerm, limit = 20, offset = 0) {
 
       // Skip if the license isn't one we allow
       if (!license) continue;
-      const licenseLower = license.toLowerCase().replace(/_/g, '-');
+      const licenseLower = license.toLowerCase().replace(/[_ ]/g, '-');
       const hasGoodLicense = GOOD_LICENSES.some((good) => licenseLower.includes(good));
       if (!hasGoodLicense) continue;
 
