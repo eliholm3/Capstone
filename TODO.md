@@ -12,3 +12,13 @@ change current dataset in top bar to the currently loading one as it is loading 
 I think at some point we said that there would be a review screen for reviewing your choices. perhaps this could be added.
 
 when swiping, when the next image displays, it temporarily shows the previous image in a flash.
+
+UI:
+why is there a reset button? let's get rid of that.
+refactor the ui. perchance we use bottom bar layout/design.
+
+we need a logo, not look like a basic app
+
+find a new name, perhaps ClassifEyer?
+if we go with that then we need to justify the name.
+eye -> model "seeing the image?"
