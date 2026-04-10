@@ -39,6 +39,8 @@ export default function SwipeScreen() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const isFetchingRef = useRef(false);
+  const cursorRef = useRef(0);
+  const retryTimerRef = useRef(null);
 
   useEffect(() => {
     loadDatasets();
@@ -65,6 +67,8 @@ export default function SwipeScreen() {
     setCurrentIndex(0);
     setKeptImages([]);
     setDiscardedImages([]);
+    cursorRef.current = 0;
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
     const data = await fetchImages(dataset.dataset_id);
     setImages(data);
   };
@@ -102,7 +106,7 @@ export default function SwipeScreen() {
   const fetchImages = async (datasetId) => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/datasets/${datasetId}/images`,
+        `${API_BASE_URL}/api/datasets/${datasetId}/images?after=${cursorRef.current}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -112,11 +116,34 @@ export default function SwipeScreen() {
         throw new Error(`Server responded with ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      if (data.length > 0) {
+        const maxId = Math.max(...data.map((img) => img.image_id));
+        cursorRef.current = maxId;
+      }
+      return data;
     } catch (e) {
       console.error("Fetch error:", e);
       return [];
     }
+  };
+
+  const doFetch = (datasetId) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    setIsFetching(true);
+
+    fetchImages(datasetId).then((newData) => {
+      if (newData.length > 0) {
+        setImages((prev) => {
+          const existingIds = new Set(prev.map((img) => img.image_id));
+          const unique = newData.filter((img) => !existingIds.has(img.image_id));
+          return unique.length > 0 ? [...prev, ...unique] : prev;
+        });
+      }
+      setIsFetching(false);
+      isFetchingRef.current = false;
+    });
   };
 
   useEffect(() => {
@@ -128,21 +155,24 @@ export default function SwipeScreen() {
       !isFetchingRef.current &&
       images.length > 0
     ) {
-      isFetchingRef.current = true;
-      setIsFetching(true);
-
-      fetchImages(activeDataset.dataset_id).then((newData) => {
-        setImages((prev) => {
-          const existingIds = new Set(prev.map((img) => img.image_id));
-          const unique = newData.filter(
-            (img) => !existingIds.has(img.image_id),
-          );
-          return [...prev, ...unique];
-        });
-        setIsFetching(false);
-        isFetchingRef.current = false;
-      });
+      doFetch(activeDataset.dataset_id);
     }
+  }, [currentIndex, images.length, activeDataset]);
+
+  // When we run out of images entirely, poll for server refills
+  useEffect(() => {
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+
+    const remaining = images.length - currentIndex;
+    if (activeDataset && remaining === 0 && images.length > 0 && !isFetchingRef.current) {
+      retryTimerRef.current = setTimeout(() => {
+        doFetch(activeDataset.dataset_id);
+      }, 3000);
+    }
+
+    return () => {
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    };
   }, [currentIndex, images.length, activeDataset]);
 
   const handleSwipe = async (image_id, direction) => {

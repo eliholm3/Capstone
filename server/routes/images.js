@@ -5,55 +5,78 @@ const { fetchWikimediaImages } = require('../services/wikimedia');
 
 const router = express.Router();
 
+// Fetch more images from Wikimedia and insert them into the DB
+async function refillFromWikimedia(datasetId) {
+  const dsRes = await pool.query(
+    "SELECT search_term, provider_offsets FROM datasets WHERE dataset_id = $1",
+    [parseInt(datasetId)]
+  );
+  if (dsRes.rows.length === 0) return;
+
+  const { search_term, provider_offsets } = dsRes.rows[0];
+  const currentOffset = provider_offsets?.wikimedia;
+
+  // null means Wikimedia has no more results for this search
+  if (currentOffset === null) return;
+
+  const offset = currentOffset || 0;
+  const { images: fetched, nextOffset } = await fetchWikimediaImages(search_term, 40, offset);
+
+  if (fetched && fetched.length > 0) {
+    for (const img of fetched) {
+      // Dedup by both URL and title to catch same image with different thumbnail URLs
+      await pool.query(
+        `INSERT INTO images (dataset_id, url, title, license, status, added_at)
+         SELECT $1, $2, $3, $4, 'pending', NOW()
+         WHERE NOT EXISTS (
+           SELECT 1 FROM images WHERE dataset_id = $1 AND (url = $2 OR title = $3)
+         )`,
+        [datasetId, img.url, img.title, img.license]
+      );
+    }
+  }
+
+  await pool.query(
+    "UPDATE datasets SET provider_offsets = $1 WHERE dataset_id = $2",
+    [JSON.stringify({ wikimedia: nextOffset }), datasetId]
+  );
+}
+
 // GET /api/datasets/:datasetId/images
 async function getImages(req, res) {
   const { datasetId } = req.params;
-  const { limit = 10 } = req.query;
+  const { limit = 10, after = 0 } = req.query;
 
   try {
-    const result = await pool.query(
-      "SELECT image_id, url, title FROM images WHERE dataset_id = $1 AND status = 'pending' LIMIT $2",
-      [parseInt(datasetId), parseInt(limit)]
+    // Query for pending images past the client's cursor
+    let result = await pool.query(
+      "SELECT image_id, url, title FROM images WHERE dataset_id = $1 AND status = 'pending' AND image_id > $3 ORDER BY image_id LIMIT $2",
+      [parseInt(datasetId), parseInt(limit), parseInt(after)]
     );
 
-    const imagesForUser = result.rows.map(img => ({ ...img, id: img.image_id }));
+    // If we got nothing, refill synchronously and try once more
+    if (result.rows.length === 0) {
+      try {
+        await refillFromWikimedia(datasetId);
+      } catch (err) {
+        console.error("Sync refill error:", err);
+      }
+      result = await pool.query(
+        "SELECT image_id, url, title FROM images WHERE dataset_id = $1 AND status = 'pending' AND image_id > $3 ORDER BY image_id LIMIT $2",
+        [parseInt(datasetId), parseInt(limit), parseInt(after)]
+      );
+    }
 
+    const imagesForUser = result.rows.map(img => ({ ...img, id: img.image_id }));
     res.json(imagesForUser);
 
-    // Background Refill
+    // Background refill so the NEXT request is fast
     const countRes = await pool.query(
       "SELECT COUNT(*) FROM images WHERE dataset_id = $1 AND status = 'pending'",
       [parseInt(datasetId)]
     );
-    const pendingInDb = parseInt(countRes.rows[0].count);
-
-    if (pendingInDb < 15) {
-      const dsRes = await pool.query(
-        "SELECT search_term, provider_offsets FROM datasets WHERE dataset_id = $1",
-        [parseInt(datasetId)]
-      );
-
-      if (dsRes.rows.length > 0) {
-        const { search_term, provider_offsets } = dsRes.rows[0];
-        const currentOffset = provider_offsets?.wikimedia || 0;
-
-        fetchWikimediaImages(search_term, 40, currentOffset).then(async ({ images, nextOffset }) => {
-          if (images && images.length > 0) {
-            for (const img of images) {
-              await pool.query(
-                `INSERT INTO images (dataset_id, url, title, license, status, added_at)
-                 SELECT $1, $2, $3, $4, 'pending', NOW()
-                 WHERE NOT EXISTS (SELECT 1 FROM images WHERE dataset_id = $1 AND url = $2)`,
-                [datasetId, img.url, img.title, img.license]
-              );
-            }
-            await pool.query(
-              "UPDATE datasets SET provider_offsets = $1 WHERE dataset_id = $2",
-              [JSON.stringify({ wikimedia: nextOffset }), datasetId]
-            );
-          }
-        }).catch(err => console.error("Refill Error:", err));
-      }
+    if (parseInt(countRes.rows[0].count) < 30) {
+      refillFromWikimedia(datasetId).catch(err => console.error("Background refill error:", err));
     }
   } catch (err) {
     console.error('Fetch Error:', err);
