@@ -23,8 +23,8 @@ describe('GET /api/datasets/:datasetId/images (getImages)', () => {
 
   it('200 — returns pending images array', async () => {
     db.query
-      .mockResolvedValueOnce({ rows: [{ image_id: 1, url: 'http://a.jpg', title: 'A' }] }) // main query
-      .mockResolvedValueOnce({ rows: [{ count: '20' }] }); // count for refill check
+      .mockResolvedValueOnce({ rows: [{ image_id: 1, url: 'http://a.jpg', title: 'A' }] }) // cursor query — has results
+      .mockResolvedValueOnce({ rows: [{ count: '20' }] }); // background refill count check
     const { req, res } = mockReqRes({ params: { datasetId: '1' } });
     await getImages(req, res);
     expect(res.statusCode).toBe(200);
@@ -34,9 +34,11 @@ describe('GET /api/datasets/:datasetId/images (getImages)', () => {
 
   it('200 — returns empty array when no pending images', async () => {
     db.query
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [{ count: '0' }] })
-      .mockResolvedValueOnce({ rows: [{ search_term: 'cats', provider_offsets: {} }] });
+      .mockResolvedValueOnce({ rows: [] })                    // 1st cursor query — empty
+      .mockResolvedValueOnce({ rows: [{ search_term: 'cats', provider_offsets: {} }] }) // refill: dataset lookup
+      .mockResolvedValueOnce({ rows: [] })                    // refill: offset update (wikimedia mock returns nothing)
+      .mockResolvedValueOnce({ rows: [] })                    // 2nd cursor query — still empty
+      .mockResolvedValueOnce({ rows: [{ count: '0' }] });    // background refill count check
     const { req, res } = mockReqRes({ params: { datasetId: '1' } });
     await getImages(req, res);
     expect(res.statusCode).toBe(200);
