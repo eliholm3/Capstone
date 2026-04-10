@@ -62,9 +62,9 @@ export default function SwipeScreen() {
   const selectDataset = async (dataset) => {
     setActiveDataset(dataset);
     setImages([]);
-    setCurrentIndex(0);
     setKeptImages([]);
     setDiscardedImages([]);
+    setCurrentIndex(0);
     const data = await fetchImages(dataset.dataset_id);
     setImages(data);
   };

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,11 @@ import {
   PanResponder,
   StyleSheet,
   Dimensions,
-} from 'react-native';
-import { Image } from 'expo-image';
+} from "react-native";
+import { Image } from "expo-image";
 
 const SWIPE_THRESHOLD = 100;
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function SwipeCard({ image, onSwipe, theme }) {
   const pan = useRef(new Animated.ValueXY()).current;
@@ -19,23 +19,28 @@ export default function SwipeCard({ image, onSwipe, theme }) {
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: Animated.event(
-        [null, { dx: pan.x, dy: pan.y }],
-        { useNativeDriver: false }
-      ),
+      // Tracks finger movement
+      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
+        useNativeDriver: false,
+      }),
+      // When user lets go
       onPanResponderRelease: (_, gesture) => {
         if (Math.abs(gesture.dx) > SWIPE_THRESHOLD) {
-          const direction = gesture.dx > 0 ? 'right' : 'left';
-          const toX = direction === 'right' ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5;
+          const direction = gesture.dx > 0 ? "right" : "left";
+          const toX =
+            direction === "right" ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5;
+          // Animation for swipe out
           Animated.timing(pan, {
             toValue: { x: toX, y: gesture.dy },
             duration: 300,
             useNativeDriver: false,
           }).start(() => {
+            // Call fucntion to handle the categorization
             onSwipe(image.image_id, direction);
             pan.setValue({ x: 0, y: 0 });
           });
         } else {
+          // Return card to origin
           Animated.spring(pan, {
             toValue: { x: 0, y: 0 },
             useNativeDriver: false,
@@ -43,43 +48,40 @@ export default function SwipeCard({ image, onSwipe, theme }) {
           }).start();
         }
       },
-    })
+    }),
   ).current;
 
+  // Tilting effect when moving left/right
   const rotate = pan.x.interpolate({
     inputRange: [-200, 0, 200],
-    outputRange: ['-20deg', '0deg', '20deg'],
+    outputRange: ["-20deg", "0deg", "20deg"],
   });
 
   const keepOpacity = pan.x.interpolate({
     inputRange: [50, 150],
     outputRange: [0, 1],
-    extrapolate: 'clamp',
+    extrapolate: "clamp",
   });
 
   const discardOpacity = pan.x.interpolate({
     inputRange: [-150, -50],
     outputRange: [1, 0],
-    extrapolate: 'clamp',
+    extrapolate: "clamp",
   });
 
   const cardOpacity = pan.x.interpolate({
     inputRange: [-400, 0, 400],
     outputRange: [0.6, 1, 0.6],
-    extrapolate: 'clamp',
+    extrapolate: "clamp",
   });
 
   return (
     <Animated.View
       style={[
         styles.card,
-        { borderColor: theme.border, cursor: 'grab', userSelect: 'none' },
+        { borderColor: theme.border, cursor: "grab", userSelect: "none" },
         {
-          transform: [
-            { translateX: pan.x },
-            { translateY: pan.y },
-            { rotate },
-          ],
+          transform: [{ translateX: pan.x }, { translateY: pan.y }, { rotate }],
           opacity: cardOpacity,
         },
       ]}
@@ -93,14 +95,32 @@ export default function SwipeCard({ image, onSwipe, theme }) {
         pointerEvents="none"
       />
 
-      <Animated.View style={[styles.overlay, styles.keepOverlay, { opacity: keepOpacity }]}>
-        <Text style={[styles.overlayText, { color: theme.keepColor, borderColor: theme.keepColor }]}>
+      <Animated.View
+        style={[styles.overlay, styles.keepOverlay, { opacity: keepOpacity }]}
+      >
+        <Text
+          style={[
+            styles.overlayText,
+            { color: theme.keepColor, borderColor: theme.keepColor },
+          ]}
+        >
           KEEP
         </Text>
       </Animated.View>
 
-      <Animated.View style={[styles.overlay, styles.discardOverlay, { opacity: discardOpacity }]}>
-        <Text style={[styles.overlayText, { color: theme.discardColor, borderColor: theme.discardColor }]}>
+      <Animated.View
+        style={[
+          styles.overlay,
+          styles.discardOverlay,
+          { opacity: discardOpacity },
+        ]}
+      >
+        <Text
+          style={[
+            styles.overlayText,
+            { color: theme.discardColor, borderColor: theme.discardColor },
+          ]}
+        >
           DISCARD
         </Text>
       </Animated.View>
@@ -110,33 +130,33 @@ export default function SwipeCard({ image, onSwipe, theme }) {
 
 const styles = StyleSheet.create({
   card: {
-    width: '100%',
+    width: "100%",
     flex: 1,
-    backgroundColor: '#18181b',
+    backgroundColor: "#18181b",
     borderRadius: 8,
     borderWidth: 1,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   image: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   overlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 40,
     padding: 8,
   },
   keepOverlay: {
     left: 20,
-    transform: [{ rotate: '-15deg' }],
+    transform: [{ rotate: "-15deg" }],
   },
   discardOverlay: {
     right: 20,
-    transform: [{ rotate: '15deg' }],
+    transform: [{ rotate: "15deg" }],
   },
   overlayText: {
     fontSize: 32,
-    fontWeight: '900',
+    fontWeight: "900",
     borderWidth: 3,
     borderRadius: 4,
     paddingHorizontal: 12,
