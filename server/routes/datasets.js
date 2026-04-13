@@ -116,6 +116,34 @@ async function getDataset(req, res) {
   }
 }
 
+// GET /api/datasets/summary — Lightweight summary of all datasets for cards/thumbnails
+async function datasetSummary(req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT
+         d.dataset_id,
+         d.name,
+         COUNT(i.image_id) FILTER (WHERE i.status = 'approved') AS approved_count,
+         COUNT(i.image_id) FILTER (WHERE i.status = 'pending')  AS pending_count,
+         COUNT(i.image_id) FILTER (WHERE i.status = 'rejected') AS rejected_count,
+         COALESCE(
+           (SELECT url FROM images WHERE dataset_id = d.dataset_id AND status = 'approved' ORDER BY added_at DESC LIMIT 1),
+           (SELECT url FROM images WHERE dataset_id = d.dataset_id AND status = 'pending'  ORDER BY added_at DESC LIMIT 1)
+         ) AS recent_image
+       FROM datasets d
+       LEFT JOIN images i ON i.dataset_id = d.dataset_id
+       WHERE d.user_id = $1
+       GROUP BY d.dataset_id
+       ORDER BY d.created_at DESC`,
+      [req.user.user_id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Dataset summary error:', err);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+}
+
 // DELETE /api/datasets/:id — Delete a dataset (cascades to images)
 async function deleteDataset(req, res) {
   try {
@@ -137,6 +165,7 @@ async function deleteDataset(req, res) {
 
 router.post('/', auth, createDataset);
 router.get('/', auth, listDatasets);
+router.get('/summary', auth, datasetSummary);
 router.get('/:id', auth, getDataset);
 router.delete('/:id', auth, deleteDataset);
 
@@ -145,3 +174,4 @@ module.exports.createDataset = createDataset;
 module.exports.listDatasets = listDatasets;
 module.exports.getDataset = getDataset;
 module.exports.deleteDataset = deleteDataset;
+module.exports.datasetSummary = datasetSummary;
