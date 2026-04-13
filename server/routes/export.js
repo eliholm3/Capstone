@@ -6,6 +6,19 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+// Convert a Wikimedia thumbnail URL back to the full-resolution original.
+// Wikimedia's pattern:
+//   thumb: .../wikipedia/commons/thumb/a/bc/Example.jpg/480px-Example.jpg
+//   full:  .../wikipedia/commons/a/bc/Example.jpg
+// Strip the "/thumb" segment and the trailing "/<width>px-<filename>" part.
+// Non-Wikimedia or already-full URLs are returned unchanged.
+function toFullResUrl(url) {
+  if (!url || !url.includes('/wikipedia/')) return url;
+  const match = url.match(/^(.*\/wikipedia\/[^/]+)\/thumb\/(.+)\/[^/]+$/);
+  if (!match) return url;
+  return `${match[1]}/${match[2]}`;
+}
+
 // Escape a value for CSV per RFC 4180: wrap in quotes if it contains
 // a comma, quote, or newline; double any embedded quotes.
 function csvEscape(value) {
@@ -41,10 +54,10 @@ async function exportImages(req, res) {
       [dataset_id]
     );
 
-    // Build CSV
+    // Build CSV — export the full-resolution Wikimedia URL, not the thumbnail we store for the swipe UI
     const header = 'image_id,url,title,license';
     const rows = result.rows.map(r =>
-      [r.image_id, csvEscape(r.url), csvEscape(r.title), csvEscape(r.license)].join(',')
+      [r.image_id, csvEscape(toFullResUrl(r.url)), csvEscape(r.title), csvEscape(r.license)].join(',')
     );
     const csv = [header, ...rows].join('\n');
 
