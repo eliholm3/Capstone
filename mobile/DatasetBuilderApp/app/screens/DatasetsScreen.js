@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useFocusEffect } from '@react-navigation/native';
 import { useDatasets } from '../context/DatasetContext';
 import { themes } from '../theme';
 
@@ -30,9 +31,11 @@ export default function DatasetsScreen({ navigation }) {
   const [isCreating, setIsCreating] = useState(false);
   const searchTermRef = useRef(null);
 
-  useEffect(() => {
-    loadDatasets();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadDatasets();
+    }, [])
+  );
 
   const handleSelectDataset = (ds) => {
     setActiveDataset(ds);
