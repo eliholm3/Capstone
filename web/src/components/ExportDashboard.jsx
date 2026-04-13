@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
+import MatrixBackground from './MatrixBackground'
 
 function ExportDashboard({ username, onSignOut }) {
   const [datasets, setDatasets] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [exporting, setExporting] = useState(null)
+  const [search, setSearch] = useState('')
 
   const token = localStorage.getItem('token')
 
@@ -77,30 +79,53 @@ function ExportDashboard({ username, onSignOut }) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 px-4 py-10">
-      <div className="mx-auto max-w-2xl space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-white">Export Panel</h1>
-            <p className="text-sm text-zinc-400">Signed in as {username}</p>
+    <div className="min-h-screen bg-zinc-950 px-4 py-10 relative">
+      <MatrixBackground />
+      <div className="mx-auto max-w-2xl space-y-8 relative z-10">
+        <div className="space-y-4">
+          <div className="flex justify-center">
+            <img
+              src="/Classi-Logo-Style1-Transparent.png"
+              alt="Classi Logo"
+              className="h-16 w-auto"
+            />
           </div>
-          <button
-            onClick={onSignOut}
-            className="rounded-md bg-zinc-800 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-700 transition-colors cursor-pointer"
-          >
-            Sign Out
-          </button>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-white">Export Panel</h1>
+              <p className="text-sm text-zinc-400">Signed in as {username}</p>
+            </div>
+            <button
+              onClick={onSignOut}
+              className="rounded-md bg-zinc-800 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-700 transition-colors cursor-pointer"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
+
+        <input
+          type="text"
+          placeholder="Search datasets..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-600"
+        />
 
         {error && <p className="text-sm text-red-400">{error}</p>}
 
         {loading ? (
           <p className="text-sm text-zinc-400">Loading datasets...</p>
         ) : datasets.length === 0 ? (
-          <p className="text-sm text-zinc-400">No datasets found. Create one from the mobile app.</p>
+          <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 text-center">
+            <p className="text-sm text-zinc-400">No datasets found. Create one from the mobile app.</p>
+          </div>
         ) : (
           <div className="space-y-4">
-            {datasets.map((ds) => (
+            {datasets.filter((ds) => {
+              const q = search.toLowerCase()
+              return ds.name.toLowerCase().includes(q) || ds.search_term.toLowerCase().includes(q)
+            }).map((ds) => (
               <div
                 key={ds.dataset_id}
                 className="rounded-lg border border-zinc-800 bg-zinc-900 p-4 space-y-3"
