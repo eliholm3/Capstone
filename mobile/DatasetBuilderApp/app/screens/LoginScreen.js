@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,7 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const passwordRef = useRef(null);
 
   const handleLogin = async () => {
     setError('');
@@ -81,16 +82,22 @@ export default function LoginScreen({ navigation }) {
                   autoCorrect={false}
                   placeholder="johndoe"
                   placeholderTextColor={t.inputPlaceholder}
+                  returnKeyType="next"
+                  onSubmitEditing={() => passwordRef.current?.focus()}
+                  blurOnSubmit={false}
                 />
 
                 <Text style={[styles.label, { color: t.subText }]}>Password</Text>
                 <TextInput
+                  ref={passwordRef}
                   style={[styles.input, { backgroundColor: t.inputBg, borderColor: t.inputBorder, color: t.inputText }]}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
                   placeholder="Enter password"
                   placeholderTextColor={t.inputPlaceholder}
+                  returnKeyType="go"
+                  onSubmitEditing={handleLogin}
                 />
 
                 {error ? <Text style={styles.error}>{error}</Text> : null}

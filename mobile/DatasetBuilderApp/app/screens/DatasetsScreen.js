@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -28,6 +28,7 @@ export default function DatasetsScreen({ navigation }) {
   const [newDatasetName, setNewDatasetName] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const searchTermRef = useRef(null);
 
   useEffect(() => {
     loadDatasets();
@@ -166,8 +167,12 @@ export default function DatasetsScreen({ navigation }) {
                 placeholder="Dataset name"
                 placeholderTextColor={t.inputPlaceholder}
                 autoFocus
+                returnKeyType="next"
+                onSubmitEditing={() => searchTermRef.current?.focus()}
+                blurOnSubmit={false}
               />
               <TextInput
+                ref={searchTermRef}
                 style={[
                   styles.input,
                   { backgroundColor: t.inputBg, borderColor: t.inputBorder, color: t.inputText },
@@ -176,6 +181,8 @@ export default function DatasetsScreen({ navigation }) {
                 onChangeText={setSearchTerm}
                 placeholder="Search term (e.g. Birds)"
                 placeholderTextColor={t.inputPlaceholder}
+                returnKeyType="go"
+                onSubmitEditing={handleCreate}
               />
               <View style={styles.formButtons}>
                 <TouchableOpacity
