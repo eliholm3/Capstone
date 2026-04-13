@@ -178,7 +178,7 @@ export default function DatasetsScreen({ navigation }) {
                     setNewDatasetName('');
                     setSearchTerm('');
                   }}
-                  style={[styles.btn, { backgroundColor: t.buttonBg, borderColor: t.buttonBorder }]}
+                  style={[styles.btn, styles.cancelBtn, { backgroundColor: t.buttonBg, borderColor: t.buttonBorder }]}
                 >
                   <Text style={[styles.btnText, { color: t.buttonText }]}>Cancel</Text>
                 </TouchableOpacity>
@@ -307,8 +307,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   btn: {
-    flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: 6,
     borderWidth: 1,
@@ -317,10 +316,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   createBtn: {
+    flex: 1,
     borderWidth: 0,
+  },
+  cancelBtn: {
+    flex: 1,
   },
   newBtn: {
     flexDirection: 'row',
+    alignSelf: 'stretch',
     gap: 6,
     borderWidth: 0,
   },

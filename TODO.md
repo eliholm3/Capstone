@@ -1,7 +1,5 @@
 BUGS/ISSUES:
 
-New dataset create button displays as a thin white bar with no text on Android
-
 When swiping, the next image temporarily flashes the previous image during transition.
 
 =============================================================================================================================
