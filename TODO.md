@@ -1,24 +1,29 @@
-Add pagination to API calls
+BUGS/ISSUES:
 
-Submit form on enter press when logging in
+Swipe image -> Press undo -> Kept/Discarded value doesn't revert
 
-Persistent session storage? -> Currently, when logging out and back in, I see the buffer is where I left off at, but my kept and discarded values are 0 on our status bar
-^explanation of task. currently, images route returns only the pending images. this means that refactoring will need to occur in order to allow for the described behavior to be changed. I believe the solution will be to create new routes for getting the kept and discarded images on database load. this will keep the most logic the same while still adding this functionality.
+Logo in header displays at very top of screen on android (in same area as phone (system) notification bar and pinhole camera on S24+)
+    Need to move logo down a bit so that it isn't getting covered
 
-add delete button for datasets in app
+System top bar (notification bar and time bar on OneUI) displaying as black/gray over our application
+    Is there a way to change which color this displays as?
 
-change current dataset in top bar to the currently loading one as it is loading after creation
+New dataset create button displays as a thin white bar with no text on Android
 
-I think at some point we said that there would be a review screen for reviewing your choices. perhaps this could be added.
+When swiping, the next image temporarily flashes the previous image during transition.
 
-when swiping, when the next image displays, it temporarily shows the previous image in a flash.
+=============================================================================================================================
 
-UI:
-why is there a reset button? let's get rid of that.
-refactor the ui. perchance we use bottom bar layout/design.
+FEATURES TO ADD:
 
-we need a logo, not look like a basic app
+Dataset counts (approved/rejected/pending) on the Datasets tab go stale during a swipe session.
+    useFocusEffect from @react-navigation/native could reload the summary when the user returns to the Datasets tab.
 
-find a new name, perhaps ClassifEyer?
-if we go with that then we need to justify the name.
-eye -> model "seeing the image?"
+Update dataset thumbnail (recent_image) after swiping — newly approved images won't appear as the card thumbnail until the summary is re-fetched.
+
+Keyboard covers form input fields when creating a dataset on the Datasets screen.
+    Consider KeyboardAvoidingView or scroll-on-focus behavior.
+
+Submit form on enter press when logging in.
+
+Review screen for browsing approved/rejected images in a dataset.
