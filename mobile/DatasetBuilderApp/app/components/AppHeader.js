@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: t.bg,
     borderBottomWidth: 1,
-    paddingBottom: 10,
+    paddingBottom: 8,
     paddingHorizontal: 16,
     justifyContent: "flex-end",
   },
