@@ -109,17 +109,17 @@ export default function DatasetsScreen({ navigation }) {
           <View style={styles.counts}>
             <View style={[styles.countPill, { backgroundColor: 'rgba(34,197,94,0.15)' }]}>
               <Text style={[styles.countText, { color: t.keepColor }]}>
-                ✓ {ds.approved_count ?? 0}
+                ✓ {parseInt(ds.approved_count, 10) || 0}
               </Text>
             </View>
             <View style={[styles.countPill, { backgroundColor: 'rgba(239,68,68,0.15)' }]}>
               <Text style={[styles.countText, { color: t.discardColor }]}>
-                ✗ {ds.rejected_count ?? 0}
+                ✗ {parseInt(ds.rejected_count, 10) || 0}
               </Text>
             </View>
             <View style={[styles.countPill, { backgroundColor: t.buttonBg }]}>
               <Text style={[styles.countText, { color: t.mutedText }]}>
-                ○ {ds.pending_count ?? 0}
+                ○ {parseInt(ds.pending_count, 10) || 0}
               </Text>
             </View>
           </View>
