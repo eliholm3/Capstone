@@ -156,6 +156,9 @@ export default function SwipeScreen() {
 
   const handleUndo = () => {
     if (currentIndex === 0) return;
+    const prevImage = images[currentIndex - 1];
+    setKeptImages((prev) => prev.filter((img) => img.image_id !== prevImage.image_id));
+    setDiscardedImages((prev) => prev.filter((img) => img.image_id !== prevImage.image_id));
     setCurrentIndex((prev) => prev - 1);
   };
 

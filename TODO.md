@@ -1,7 +1,5 @@
 BUGS/ISSUES:
 
-Swipe image -> Press undo -> Kept/Discarded value doesn't revert
-
 Logo in header displays at very top of screen on android (in same area as phone (system) notification bar and pinhole camera on S24+) Need to move logo down a bit so that it isn't getting covered
 
 System top bar (notification bar and time bar on OneUI) displaying as black/gray over our application Is there a way to change which color this displays as?
