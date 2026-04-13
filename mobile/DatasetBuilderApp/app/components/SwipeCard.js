@@ -35,9 +35,7 @@ export default function SwipeCard({ image, onSwipe, theme }) {
             duration: 300,
             useNativeDriver: false,
           }).start(() => {
-            // Call fucntion to handle the categorization
             onSwipe(image.image_id, direction);
-            pan.setValue({ x: 0, y: 0 });
           });
         } else {
           // Return card to origin
@@ -91,7 +89,7 @@ export default function SwipeCard({ image, onSwipe, theme }) {
         source={{ uri: image.url }}
         style={styles.image}
         contentFit="cover"
-        transition={200}
+        transition={100}
         pointerEvents="none"
       />
 

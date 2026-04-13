@@ -1,7 +1,5 @@
 BUGS/ISSUES:
 
-When swiping, the next image temporarily flashes the previous image during transition.
-
 =============================================================================================================================
 
 FEATURES TO ADD:
