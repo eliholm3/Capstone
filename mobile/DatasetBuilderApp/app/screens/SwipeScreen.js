@@ -203,8 +203,8 @@ export default function SwipeScreen() {
           {activeDataset && (
             <>
               <StatsBar
-                kept={keptImages.length}
-                discarded={discardedImages.length}
+                kept={(activeDataset.approved_count ?? 0) + keptImages.length}
+                discarded={(activeDataset.rejected_count ?? 0) + discardedImages.length}
                 inBuffer={images.length - currentIndex}
                 isFetching={isFetching}
                 theme={t}
