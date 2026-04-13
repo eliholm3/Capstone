@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -82,9 +83,13 @@ export default function RegisterScreen({ navigation }) {
           <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
             <View style={styles.inner}>
               <View style={styles.header}>
-                <Text style={[styles.title, { color: t.text }]}>Dataset Builder</Text>
+                <Image
+                  source={require('../../assets/Classi-Logo-Style1-Transparent.png')}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
                 <Text style={[styles.subtitle, { color: t.mutedText }]}>
-                  Create an account for the Swipe Interface
+                  Create an account to get started
                 </Text>
               </View>
 
@@ -170,12 +175,12 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 24,
+    alignItems: 'center',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 4,
+  logo: {
+    width: 240,
+    height: 135,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
