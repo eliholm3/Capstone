@@ -1,10 +1,14 @@
-#                                   
- ▄   ▄▄▄▄ ▄▄                      
- ▀██████▀  ██                     
-   ██      ██                   ▀▀
-   ██      ██ ▄▀▀█▄ ▄██▀█ ▄██▀█ ██
-   ██      ██ ▄█▀██ ▀███▄ ▀███▄ ██
-   ▀█████ ▄██▄▀█▄███▄▄██▀█▄▄██▀▄██
+```bash
+#                                      
+#     ▄   ▄▄▄▄ ▄▄                      
+#     ▀██████▀  ██                     
+#       ██      ██                   ▀▀
+#       ██      ██ ▄▀▀█▄ ▄██▀█ ▄██▀█ ██
+#       ██      ██ ▄█▀██ ▀███▄ ▀███▄ ██
+#       ▀█████ ▄██▄▀█▄███▄▄██▀█▄▄██▀▄██
+#                                      
+#                                      
+```
                                   
                                   
 A cross-platform mobile app that helps users quickly build clean image datasets for machine learning by swiping to keep or discard images.
