@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
 import { themes } from '../theme';
+import MatrixBackground from '../components/MatrixBackground';
 
 const t = themes.default;
 
@@ -59,6 +60,7 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={[styles.screen, { backgroundColor: t.bg }]}>
+      <MatrixBackground />
       <SafeAreaView style={styles.safe}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
