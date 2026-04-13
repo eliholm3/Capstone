@@ -33,6 +33,7 @@ curl -X POST http://ec2-3-144-42-190.us-east-2.compute.amazonaws.com/api/user/lo
 | GET | `/api/datasets` | Yes | List all your datasets |
 | GET | `/api/datasets/:id` | Yes | Get a specific dataset |
 | DELETE | `/api/datasets/:id` | Yes | Delete a dataset |
+| GET | `/api/datasets/summary` | Yes | Return list of {dataset_id, name, approved_count, pending_count, rejected_count, recent_image (url of recent image)} |
 
 ### Images
 

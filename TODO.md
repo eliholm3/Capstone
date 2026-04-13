@@ -8,9 +8,9 @@ Logo in header displays at very top of screen on android (in same area as phone 
 System top bar (notification bar and time bar on OneUI) displaying as black/gray over our application
     Is there a way to change which color this displays as?
 
-New dataset create button displays as a thin white bar with no text on Android
+New dataset create button displays as a thin white bar with no text on Android — may be a styling issue with the inline form introduced in the bottom nav refactor, needs testing on device.
 
-When swiping, the next image temporarily flashes the previous image during transition.
+when swiping, when the next image displays, it temporarily shows the previous image in a flash.
 
 =============================================================================================================================
 
@@ -21,9 +21,12 @@ Dataset counts (approved/rejected/pending) on the Datasets tab go stale during a
 
 Update dataset thumbnail (recent_image) after swiping — newly approved images won't appear as the card thumbnail until the summary is re-fetched.
 
-Keyboard covers form input fields when creating a dataset on the Datasets screen.
-    Consider KeyboardAvoidingView or scroll-on-focus behavior.
+Change preview image to one that is in the dataset after dataset creation
 
-Submit form on enter press when logging in.
+Update dataset selection card during session (either when re-opening view or dynamically after each swipe)
 
-Review screen for browsing approved/rejected images in a dataset.
+Keyboard kind of covers form input fields when creating dataset, possibly fix this
+
+Submit form on enter press when logging in
+
+I think at some point we said that there would be a review screen for reviewing your choices. perhaps this could be added.
