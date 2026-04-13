@@ -8,6 +8,8 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -132,7 +134,11 @@ export default function DatasetsScreen({ navigation }) {
   };
 
   return (
-    <View style={[styles.screen, { backgroundColor: t.bg }]}>
+    <KeyboardAvoidingView
+      style={[styles.screen, { backgroundColor: t.bg }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+    >
       <SafeAreaView style={styles.safe} edges={['bottom']}>
         <FlatList
           data={datasets}
@@ -211,7 +217,7 @@ export default function DatasetsScreen({ navigation }) {
           )}
         </View>
       </SafeAreaView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
