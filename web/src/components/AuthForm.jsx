@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import MatrixBackground from './MatrixBackground'
 
 function AuthForm({ onAuth }) {
   const [isLogin, setIsLogin] = useState(true)
@@ -40,12 +41,15 @@ function AuthForm({ onAuth }) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight text-white">
-            Dataset Builder
-          </h1>
+    <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 relative">
+      <MatrixBackground />
+      <div className="w-full max-w-sm space-y-6 relative z-10">
+        <div className="text-center space-y-4">
+          <img
+            src="/Classi-Logo-Style1-Transparent.png"
+            alt="Classi Logo"
+            className="mx-auto h-32 w-auto"
+          />
           <p className="text-sm text-zinc-400">
             {isLogin
               ? 'Sign in to the Export Panel'
