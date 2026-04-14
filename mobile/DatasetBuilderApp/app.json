@@ -27,6 +27,12 @@
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c6c444b6-65e7-49f9-b4fe-9fc46336eeae"
+      }
+    },
+    "owner": "classi-capstone"
   }
 }
