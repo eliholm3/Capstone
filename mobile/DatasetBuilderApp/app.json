@@ -19,7 +19,8 @@
         "foregroundImage": "./assets/app-icon.png",
         "backgroundColor": "#09090b"
       },
-      "package": "com.classicapstone.DatasetBuilderApp"
+      "package": "com.classicapstone.DatasetBuilderApp",
+      "usesCleartextTraffic": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
