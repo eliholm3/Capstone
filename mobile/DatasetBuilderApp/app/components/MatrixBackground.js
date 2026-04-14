@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Dimensions, StyleSheet, Platform } from 'react-native';
+import React, { useState, useEffect, useRef } from "react";
+import { View, Text, Dimensions, StyleSheet, Platform } from "react-native";
 
 // Matrix rain background — React Native port of web/src/components/MatrixBackground.jsx.
 // Instead of a canvas, we render each column's trail as absolutely-positioned <Text>
 // views whose opacity fades from head to tail, producing the same "falling character" effect.
 
-const CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+const CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const FONT_SIZE = 14;
 const COL_WIDTH = FONT_SIZE * 3;
 const TRAIL_LENGTH = 22;
@@ -14,7 +14,7 @@ const TICK_MS = 80;
 const randomChar = () => CHARS[Math.floor(Math.random() * CHARS.length)];
 
 export default function MatrixBackground() {
-  const [dims, setDims] = useState(() => Dimensions.get('window'));
+  const [dims, setDims] = useState(() => Dimensions.get("window"));
   const { width, height } = dims;
 
   const numColumns = Math.max(1, Math.floor(width / COL_WIDTH));
@@ -37,7 +37,9 @@ export default function MatrixBackground() {
   const [, setTick] = useState(0);
 
   useEffect(() => {
-    const sub = Dimensions.addEventListener('change', ({ window }) => setDims(window));
+    const sub = Dimensions.addEventListener("change", ({ window }) =>
+      setDims(window),
+    );
     return () => sub?.remove?.();
   }, []);
 
@@ -61,7 +63,9 @@ export default function MatrixBackground() {
 
         // Recycle streams that have fallen off the bottom.
         if (s.y * FONT_SIZE > height && Math.random() > 0.98) {
-          s.y = Math.floor(Math.random() * maxRows) - Math.floor(Math.random() * 40);
+          s.y =
+            Math.floor(Math.random() * maxRows) -
+            Math.floor(Math.random() * 40);
           s.speed = 0.3 + Math.random() * 0.7;
           s.acc = 0;
         }
@@ -76,17 +80,23 @@ export default function MatrixBackground() {
       {streamsRef.current.map((s, col) => {
         const left = col * COL_WIDTH;
         return (
-          <View key={col} style={{ position: 'absolute', left, top: 0, width: COL_WIDTH, height }}>
+          <View
+            key={col}
+            style={{
+              position: "absolute",
+              left,
+              top: 0,
+              width: COL_WIDTH,
+              height,
+            }}
+          >
             {s.chars.map((ch, i) => {
               const rowY = (s.y - i) * FONT_SIZE;
               if (rowY < -FONT_SIZE || rowY > height) return null;
               // Fade from the head (i=0, full) down the trail.
-              const opacity = (1 - i / TRAIL_LENGTH) * 0.9;
+              const opacity = (1 - i / TRAIL_LENGTH) * 0.5;
               return (
-                <Text
-                  key={i}
-                  style={[styles.char, { top: rowY, opacity }]}
-                >
+                <Text key={i} style={[styles.char, { top: rowY, opacity }]}>
                   {ch}
                 </Text>
               );
@@ -100,17 +110,21 @@ export default function MatrixBackground() {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     // Matches the low-opacity ambient feel of the web version.
-    opacity: 0.15,
+    opacity: 0.1,
   },
   char: {
-    position: 'absolute',
-    color: '#fafafa',
+    position: "absolute",
+    color: "#fafafa",
     fontSize: FONT_SIZE,
-    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),
+    fontFamily: Platform.select({
+      ios: "Menlo",
+      android: "monospace",
+      default: "monospace",
+    }),
     lineHeight: FONT_SIZE,
   },
 });
