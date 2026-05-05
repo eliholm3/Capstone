@@ -4,13 +4,20 @@ import {
   ScrollView,
   Text,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
+import { WIKIMEDIA_USER_AGENT } from '../config';
 
 const THUMB_W = 52;
 const THUMB_H = 70;
 const CURRENT_W = 70;
 const CURRENT_H = 92;
+
+// See SwipeCard.js — User-Agent is a forbidden header in browsers, and passing
+// any `headers` to expo-image on web forces a CORS-gated fetch that fails.
+const IMAGE_HEADERS =
+  Platform.OS === 'web' ? undefined : { 'User-Agent': WIKIMEDIA_USER_AGENT };
 
 export default function BufferStrip({ bufferImages, theme }) {
   const scrollRef = useRef(null);
@@ -55,9 +62,16 @@ export default function BufferStrip({ bufferImages, theme }) {
               ]}
             >
               <Image
-                source={{ uri: img.url }}
+                source={{
+                  uri: img.url,
+                  headers: IMAGE_HEADERS,
+                }}
                 style={[styles.thumb, { borderRadius: 3 }]}
                 contentFit="cover"
+                onError={(e) => {
+                  const msg = e?.error || e?.nativeEvent?.error || 'unknown';
+                  console.warn('[BufferStrip] ERROR', img.image_id, msg, img.url);
+                }}
               />
               {overlayColor && (
                 <View

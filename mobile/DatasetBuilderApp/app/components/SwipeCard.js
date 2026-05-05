@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,14 +6,27 @@ import {
   PanResponder,
   StyleSheet,
   Dimensions,
+  ActivityIndicator,
+  TouchableOpacity,
+  Platform,
 } from "react-native";
 import { Image } from "expo-image";
+import { WIKIMEDIA_USER_AGENT } from "../config";
 
 const SWIPE_THRESHOLD = 100;
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+// Browser refuses to let JS set User-Agent (forbidden header), and passing
+// `headers` at all on web kicks expo-image off the <img> path into a CORS-gated
+// fetch — which Wikimedia's preflight doesn't allow. Only set on native.
+const IMAGE_HEADERS =
+  Platform.OS === "web" ? undefined : { "User-Agent": WIKIMEDIA_USER_AGENT };
+
 export default function SwipeCard({ image, onSwipe, theme }) {
   const pan = useRef(new Animated.ValueXY()).current;
+  const [loadState, setLoadState] = useState("loading"); // 'loading' | 'loaded' | 'error'
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -86,12 +99,60 @@ export default function SwipeCard({ image, onSwipe, theme }) {
       {...panResponder.panHandlers}
     >
       <Image
-        source={{ uri: image.url }}
+        key={retryNonce}
+        source={{
+          uri: image.url,
+          headers: IMAGE_HEADERS,
+        }}
         style={styles.image}
         contentFit="cover"
         transition={100}
         pointerEvents="none"
+        onLoadStart={() => {
+          console.log('[SwipeCard] loadStart', image.image_id, image.url);
+          setLoadState('loading');
+          setErrorMsg(null);
+        }}
+        onLoad={() => {
+          console.log('[SwipeCard] loaded', image.image_id);
+          setLoadState('loaded');
+        }}
+        onError={(e) => {
+          const msg = e?.error || e?.nativeEvent?.error || 'unknown';
+          console.warn('[SwipeCard] ERROR', image.image_id, msg, image.url);
+          setErrorMsg(String(msg));
+          setLoadState('error');
+        }}
       />
+
+      {loadState === 'loading' && (
+        <View style={styles.statusOverlay} pointerEvents="none">
+          <ActivityIndicator color={theme.loadingColor} />
+        </View>
+      )}
+
+      {loadState === 'error' && (
+        <View style={styles.statusOverlay}>
+          <Text style={[styles.errorTitle, { color: theme.text }]}>
+            Failed to load
+          </Text>
+          <Text
+            style={[styles.errorDetail, { color: theme.mutedText }]}
+            numberOfLines={3}
+          >
+            {errorMsg}
+          </Text>
+          <TouchableOpacity
+            onPress={() => setRetryNonce((n) => n + 1)}
+            style={[
+              styles.retryBtn,
+              { backgroundColor: theme.buttonBg, borderColor: theme.buttonBorder },
+            ]}
+          >
+            <Text style={[styles.retryText, { color: theme.buttonText }]}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <Animated.View
         style={[styles.overlay, styles.keepOverlay, { opacity: keepOpacity }]}
@@ -139,6 +200,29 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
+  statusOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+  },
+  errorTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+  errorDetail: {
+    fontSize: 12,
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  retryBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  retryText: { fontSize: 13, fontWeight: "500" },
   overlay: {
     position: "absolute",
     top: 40,
